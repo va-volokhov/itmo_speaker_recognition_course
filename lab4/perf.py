@@ -8,8 +8,8 @@ import numpy as np
 def ecdf(x):
     # Additional functions for computation of verification metrics
 
-    xs = np.sort(x,0)
-    ys = np.arange(1, len(xs)+1)/float(len(xs))
+    xs = np.sort(x, 0)
+    ys = np.arange(1, len(xs) + 1 )/float(len(xs))
 
     return ys, xs
 
@@ -39,8 +39,9 @@ def get_eer(target_scores, imposter_scores):
     yi = np.interp(x, np.squeeze(xi), fi)
     i = np.argmin(np.abs(yt - yi))
 
-    EER = 100 * yt[i]
+    EER = 100*yt[i]
     thresh_EER = x[i]
+    
     if np.isnan(EER):
         EER = 0
 
