@@ -15,7 +15,9 @@ import torch
 
 
 def md5(fname):
-    # MD5SUM
+    """
+    Estimate md5 sum
+    """
 
     hash_md5 = hashlib.md5()
     with open(fname, "rb") as f:
@@ -25,17 +27,27 @@ def md5(fname):
     
     return hash_md5.hexdigest()
 
-def download_dataset(lines, user, password, save_path):
-    # Download with wget
+
+def download_dataset(lines, user, password, save_path, reload=False):
+    """
+    Download datasets from lines with wget
+    :param lines: list of datasest to load in format <http_link> <md5 sum>\n
+    :param user: user_name
+    :param password:
+    :param save_path: path to folder
+    :param reload: rewrite if file exists
+    """
 
     for line in lines:
-        url     = line.strip().split(' ')[0]
-        md5gt   = line.strip().split(' ')[1]
+        url = line.strip().split(' ')[0]
+        md5gt = line.strip().split(' ')[1]
         outfile = url.split('/')[-1]
 
-        # Download files
-        out = subprocess.call('wget %s --user %s --password %s -O %s/%s'%(url, user, password, save_path, outfile), shell=True)
-        
+        out = 0
+        # Download files if needed
+        if not os.path.exists(os.path.join(save_path, outfile)) or reload:
+            out = subprocess.call('wget %s --user %s --password %s -O %s/%s'%(url, user, password, save_path, outfile), shell=True)
+
         if out != 0:
             raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
 
@@ -47,20 +59,24 @@ def download_dataset(lines, user, password, save_path):
         else:
             raise Warning('Checksum failed %s.'%outfile)
 
-def download_protocol(lines, save_path):
+
+def download_protocol(lines, save_path, reload=False):
     # Download with wget
 
     for line in lines:
         url     = line.strip()
         outfile = url.split('/')[-1]
 
+        out = 0
         # Download files
-        out = subprocess.call('wget %s -O %s/%s'%(url, save_path, outfile), shell=True)
+        if not os.path.exists(os.path.join(save_path, outfile)) or reload:
+            out = subprocess.call('wget %s -O %s/%s'%(url, save_path, outfile), shell=True)
         
         if out != 0:
             raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
 
         print('File %s is downloaded.'%outfile)
+
 
 def extract_dataset(save_path, fname):
     # Extract zip files
@@ -76,8 +92,9 @@ def extract_dataset(save_path, fname):
             zf.extractall(save_path)
 
     print('Extracting of %s is successful.'%fname)
-    
-def load_model(model, lines, save_path):
+
+
+def load_model(model, lines, save_path, reload=False):
     # Load model's weights
     
     if not os.path.exists(save_path):
@@ -87,8 +104,11 @@ def load_model(model, lines, save_path):
         url     = line.strip()
         outfile = url.split('/')[-1]
 
+        out = 0
+
         # Download files
-        out = subprocess.call('wget %s -O %s/%s'%(url, save_path, outfile), shell=True)
+        if not os.path.exists(os.path.join(save_path, outfile)) or reload:
+            out = subprocess.call('wget %s -O %s/%s'%(url, save_path, outfile), shell=True)
         
         if out != 0:
             raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
