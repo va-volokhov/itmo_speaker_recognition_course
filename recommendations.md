@@ -56,6 +56,12 @@
 
 10. Выполнить установку необходимых модулей Python для запуска программных кодов: **pip install -r requirements.txt -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html**
 
+6. Создать виртуальное окружение Python.
+   
+   * Проверить наличие virtualenv: **virtualenv --version**
+   * Если virtualenv не установлен, выполнить следующую команду: **sudo apt install virtualenv**
+   * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8**
+
 11. Установить Wget, чтобы иметь возможность скачивания данных из сети.
 
    * Проверить наличие virtualenv: **virtualenv --version**
