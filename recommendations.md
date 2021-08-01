@@ -30,33 +30,33 @@
 
 2. Создать рабочий директорий, например, с именем **work_dir**: **mkdir -m777 work_dir**
 
-3. Перейти в рабочий директорий: **cd work_dir** 
+3. Перейти в рабочий директорий: **cd work_dir**
 
 4. Клонировать репозиторий с кодами.
 
-   * Проверить наличие Git: **git --version** 
-   * Если Git не установлен, выполнить следующие команды: **sudo apt-get update** и **sudo apt-get install git** 
+   * Проверить наличие Git: **git --version**
+   * Если Git не установлен, выполнить следующие команды: **sudo apt-get update** и **sudo apt-get install git**
    * Выполнить клонирование репозитория следующей командой: **git clone https://github.com/va-volokhov/itmo_speaker_recognition_course.git**
 
 
 5. Проверить, что репозиторий склонирован, используя команду ll или ls.
 
-6. Создать виртуальное окружение Python. 
+6. Создать виртуальное окружение Python.
    
-   * Проверить наличие virtualenv: **virtualenv --version** 
-   * Если virtualenv не установлен, выполнить следующую команду: **sudo apt install virtualenv** 
-   * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8** 
+   * Проверить наличие virtualenv: **virtualenv --version**
+   * Если virtualenv не установлен, выполнить следующую команду: **sudo apt install virtualenv**
+   * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8**
 
 
 7. Активировать виртуальное окружение следующей командой, находясь в рабочем директории **work_dir**: **source ./srlab_venv/bin/activate**
 
 8. Проверить следующей командой, что интерпретатор Python привязан к созданному виртуальному окружению: **which python**
 
-9. Перейти в директорий, который содержит клонированный репозиторий: **cd itmo_speaker_recognition_course** 
+9. Перейти в директорий, который содержит клонированный репозиторий: **cd itmo_speaker_recognition_course**
 
-10. Выполнить установку необходимых модулей Python для запуска программных кодов: **pip install -r requirements.txt -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html** 
+10. Выполнить установку необходимых модулей Python для запуска программных кодов: **pip install -r requirements.txt -f https://download.pytorch.org/whl/lts/1.8/torch_lts.html**
 
-11. Установить Wget, чтобы иметь возможность скачивания данных из сети. 
+11. Установить Wget, чтобы иметь возможность скачивания данных из сети.
 
    * Проверить наличие Wget следующей командой: **wget --version**
    * В случае, если Wget отсутствует, выполнить установку так: **sudo apt-get install wget**
