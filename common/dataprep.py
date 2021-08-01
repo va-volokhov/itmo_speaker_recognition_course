@@ -1,5 +1,5 @@
 # The script is borrowed from the following repository: https://github.com/clovaai/voxceleb_trainer
-# The script downloads the VoxCeleb1 test dataset and model's weights
+# The script downloads the VoxCeleb1 test dataset
 # Requirement: wget running on a Linux system 
 
 
@@ -9,9 +9,6 @@ import subprocess
 import hashlib
 import tarfile
 from zipfile import ZipFile
-from collections import OrderedDict
-
-import torch
 
 
 def md5(fname):
@@ -92,38 +89,3 @@ def extract_dataset(save_path, fname):
             zf.extractall(save_path)
 
     print('Extracting of %s is successful.'%fname)
-
-
-def load_model(model, lines, save_path, reload=False):
-    # Load model's weights
-    
-    if not os.path.exists(save_path):
-        os.mkdir(save_path, mode=0o777)
-
-    for line in lines:
-        url     = line.strip()
-        outfile = url.split('/')[-1]
-
-        out = 0
-
-        # Download files
-        if not os.path.exists(os.path.join(save_path, outfile)) or reload:
-            out = subprocess.call('wget %s -O %s/%s'%(url, save_path, outfile), shell=True)
-        
-        if out != 0:
-            raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
-
-        print('File %s is downloaded.'%outfile)
-        
-    checkpoint = torch.load(os.path.join(save_path, 'baseline_v2_ap.model'))
-    
-    model_weight = OrderedDict()
-
-    for key in checkpoint.keys():
-        
-        if '__S__' in key:
-            model_weight[key[6:]] = checkpoint[key]
-            
-    model.load_state_dict(model_weight)
-    
-    return model

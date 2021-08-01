@@ -109,4 +109,4 @@ class SELayer(nn.Module):
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
         
-        return x * y
+        return x*y
