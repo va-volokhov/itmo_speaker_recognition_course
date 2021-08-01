@@ -48,11 +48,10 @@
    * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8**
 
 
-7. Создать виртуальное окружение Python.
+7. Установить Wget, чтобы иметь возможность скачивания данных из сети.
    
-   * Проверить наличие virtualenv: **virtualenv --version**
-   * Если virtualenv не установлен, выполнить следующую команду: **sudo apt install virtualenv**
-   * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8**
+   * Проверить наличие Wget следующей командой: **wget --version**
+   * В случае, если Wget отсутствует, выполнить устанвоку так: **sudo apt-get install wget**
 
 
 
