@@ -66,3 +66,9 @@
    * В случае, если Wget отсутствует, выполнить установку так: **sudo apt-get install wget**
 
 12. Какой-то текст!
+
+13. Создать виртуальное окружение Python.
+   
+   * Проверить наличие virtualenv: **virtualenv --version**
+   * Если virtualenv не установлен, выполнить следующую команду: **sudo apt install virtualenv**
+   * Создать виртуальное окружение, например, с именем **srlab_venv**: **virtualenv srlab_venv --python=python3.8**
