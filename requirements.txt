@@ -10,3 +10,4 @@ pyyaml
 notebook
 matplotlib
 soundfile
+scikit-image
