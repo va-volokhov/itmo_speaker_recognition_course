@@ -4,7 +4,7 @@
 
 # Import of modules
 import numpy as np
-
+from scipy.fftpack import dct
 
 
 
@@ -170,7 +170,7 @@ def compute_mfcc(filter_banks_features, num_ceps=20):
 
     return mfcc
 
-def cmvn_floating(features, LC, RC, unbiased=False):
+def mvn_floating(features, LC, RC, unbiased=False):
     # Here you need to do mean variance normalization of the input features
     """
         Mean and variance normalization over a floating window.
