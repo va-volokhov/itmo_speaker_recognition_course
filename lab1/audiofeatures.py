@@ -272,11 +272,18 @@ def add_deriv(fea, winlens=(2,2)):
   return np.hstack(fea_list)
 
 
-def cmvn_floating(m,LC,RC, unbiased=False):
-    """Mean and variance normalization over a floating window.
-    m is the feature matrix (nframes x dim)
-    LC, RC is the nmber of frames to the left and right defining the floating
-    window around the current frame
+def cmvn_floating(m, LC, RC, unbiased=False):
+    """
+        Mean and variance normalization over a floating window.
+        m is the feature matrix (nframes x dim)
+        LC, RC is  and
+        window around the current frame
+
+    :param m: features matrix [nframes x nfeats]
+    :param LC: the number of frames to the left defining the floating
+    :param RC: the number of frames to the right defining the floating
+    :param unbiased: biased or unbiased estimation of normalising sigma
+    :return:  m_normalised: normalised features matrix [nframes x nfeats]
     """
     nframes, dim = m.shape
     LC = min(LC,nframes-1)
@@ -287,6 +294,7 @@ def cmvn_floating(m,LC,RC, unbiased=False):
     f = (np.r_[f[RC:], np.repeat(f[[-1]],RC, axis=0)] - np.r_[np.zeros((LC+1,dim)), f[:-LC-1]]) / n
     s = (np.r_[s[RC:], np.repeat(s[[-1]],RC, axis=0)] - np.r_[np.zeros((LC+1,dim)), s[:-LC-1]]
         ) / (n-1 if unbiased else n) - f**2 * (n/(n-1) if unbiased else 1)
-    m = (m - f) / np.sqrt(s)
-    m[s == 0] = 0
-    return m
+    m_normalised = (m - f) / np.sqrt(s)
+    m_normalised[s == 0] = 0
+
+    return m_normalised
