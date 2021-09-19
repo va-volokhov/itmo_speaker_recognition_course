@@ -5,6 +5,7 @@
 
 # Import of modules
 import os
+import time
 import subprocess
 import hashlib
 import tarfile
@@ -24,7 +25,6 @@ def md5(fname):
     
     return hash_md5.hexdigest()
 
-
 def download_dataset(lines, user, password, save_path, reload=False):
     """
     Download datasets from lines with wget
@@ -40,13 +40,33 @@ def download_dataset(lines, user, password, save_path, reload=False):
         md5gt = line.strip().split(' ')[1]
         outfile = url.split('/')[-1]
 
-        out = 0
+        out = -1
         # Download files if needed
         if not os.path.exists(os.path.join(save_path, outfile)) or reload:
-            out = subprocess.call('wget %s --user %s --password %s -O %s/%s'%(url, user, password, save_path, outfile), shell=True)
+            
+            while out != 0:
+                out = subprocess.call('wget -c --tries=0 --read-timeout=10 %s --user %s --password %s -O %s/%s'%(url, user, password, save_path, outfile), shell=True)
+                
+                time.sleep(120)
 
-        if out != 0:
-            raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
+        # Check MD5
+        md5ck = md5('%s/%s'%(save_path, outfile))
+        if md5ck == md5gt:
+            print('Checksum successful %s.'%outfile)
+        
+        else:
+            raise Warning('Checksum failed %s.'%outfile)
+            
+def concatenate(lines, save_path):
+    # Concatenate file parts
+
+    for line in lines:
+        infile  = line.split()[0]
+        outfile = line.split()[1]
+        md5gt   = line.split()[2]
+
+        # Concatenate files
+        out = subprocess.call('cat %s/%s > %s/%s' %(save_path, infile, save_path, outfile), shell=True)
 
         # Check MD5
         md5ck = md5('%s/%s'%(save_path, outfile))
@@ -56,6 +76,7 @@ def download_dataset(lines, user, password, save_path, reload=False):
         else:
             raise Warning('Checksum failed %s.'%outfile)
 
+        out = subprocess.call('rm %s/%s' %(save_path, infile), shell=True)
 
 def download_protocol(lines, save_path, reload=False):
     # Download with wget
@@ -73,7 +94,6 @@ def download_protocol(lines, save_path, reload=False):
             raise ValueError('Download failed %s. If download fails repeatedly, use alternate URL on the VoxCeleb website.'%url)
 
         print('File %s is downloaded.'%outfile)
-
 
 def extract_dataset(save_path, fname):
     # Extract zip files
