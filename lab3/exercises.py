@@ -53,8 +53,6 @@ class train_dataset_loader(Dataset):
         audio = loadWAV(self.data_list[index], self.max_frames, evalmode=False)
 
         if self.augment:
-            ###########################################################
-            # Here is your code
             augtype = random.randint(0, 4)
 
             if augtype == 1:
@@ -68,7 +66,6 @@ class train_dataset_loader(Dataset):
 
             elif augtype == 4:
                 audio = self.augment_wav.additive_noise('noise',  audio)
-            ###########################################################
             
         return torch.FloatTensor(audio), self.data_label[index]
 
@@ -217,8 +214,6 @@ class ResNet(nn.Module):
                 
                 x = self.instancenorm(x).unsqueeze(1)
 
-        ###########################################################
-        # Here is your code
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -245,7 +240,6 @@ class ResNet(nn.Module):
         x = x.view(x.size()[0], -1)
         
         x = self.fc(x)
-        ###########################################################
 
         return x
 
@@ -291,8 +285,6 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
 
         data = data.transpose(1, 0)
         
-        ###########################################################
-        # Here is your code
         main_model.zero_grad()
 
         label = torch.LongTensor(data_label).cuda()
@@ -305,7 +297,6 @@ def train_network(train_loader, main_model, optimizer, scheduler, num_epoch, ver
         top1    += prec1.detach().cpu().item()
         counter += 1
         index   += stepsize
-        ###########################################################
         
         if verbose:
             print("Epoch {:1.0f}, Batch {:1.0f}, LR {:f} Loss {:f}, Accuracy {:2.3f}%".format(num_epoch, counter, optimizer.param_groups[0]['lr'], loss/counter, top1/counter))
@@ -329,8 +320,6 @@ def test_network(test_loader, main_model):
         
         data = data.transpose(1, 0)
         
-        ###########################################################
-        # Here is your code
         label = torch.LongTensor(data_label).cuda()
 
         with torch.no_grad():
@@ -339,6 +328,5 @@ def test_network(test_loader, main_model):
         loss    += nloss.detach().cpu().item()
         top1    += prec1.detach().cpu().item()
         counter += 1
-        ###########################################################
 
     return (loss/counter, top1/counter)
