@@ -11,9 +11,9 @@ def split_meta_line(line, delimiter=' '):
     # line format is "Speaker_ID Gender Path"
     
     """
-    :param line:
-    :param delimiter:
-    :return:
+    :param line: lines of metadata
+    :param delimiter: delimeter
+    :return: speaker_id: speaker IDs: gender: gender: file_path: path to file
     """
 
     ###########################################################
@@ -29,7 +29,7 @@ def preemphasis(signal, pre_emphasis=0.97):
     """
     :param signal: input signal
     :param pre_emphasis: preemphasis coeffitient
-    :return: emphasized_signal
+    :return: emphasized_signal: signal after pre-emphasis procedure
     """
 
     ###########################################################
@@ -44,11 +44,11 @@ def framing(emphasized_signal, sample_rate=16000, frame_size=0.025, frame_stride
     # Please use hamming windowing
     
     """
-    :param emphasized_signal:
+    :param emphasized_signal: signal after pre-emphasis procedure
     :param sample_rate: signal sampling rate
     :param frame_size: sliding window size
     :param frame_stride: step
-    :return: frames - output matrix [nframes x sample_rate*frame_size]
+    :return: frames: output matrix [nframes x sample_rate*frame_size]
     """
 
     frame_length, frame_step = frame_size * sample_rate, frame_stride * sample_rate # convert from seconds to samples
@@ -76,7 +76,7 @@ def power_spectrum(frames, NFFT=512):
     """
     :param frames: framed signal
     :param NFFT: number of fft bins
-    :return: pow_frames - framed signal power spectrum
+    :return: pow_frames: framed signal power spectrum
     """
 
     mag_frames = np.absolute(np.fft.rfft(frames, NFFT))  # Magnitude of the FFT
@@ -89,7 +89,7 @@ def power_spectrum(frames, NFFT=512):
     return pow_frames
 
 def compute_fbank_filters(nfilt=40, sample_rate=16000, NFFT=512):
-    # Here you need to compute fbank filters for special case (sample_rate & NFFT)
+    # Here you need to compute fbank filters (FBs) for special case (sample_rate & NFFT)
 
     """
     :param nfilt: number of filters
@@ -120,8 +120,8 @@ def compute_fbank_filters(nfilt=40, sample_rate=16000, NFFT=512):
     fbank = np.zeros((nfilt, int(np.floor(NFFT / 2 + 1))))
     for m in range(1, nfilt + 1):
         f_m_minus = int(bin[m - 1]) # left
-        f_m = int(bin[m]) # center
-        f_m_plus = int(bin[m + 1]) # right
+        f_m = int(bin[m])           # center
+        f_m_plus = int(bin[m + 1])  # right
 
         for k in range(f_m_minus, f_m):
             fbank[m - 1, k] = (k - bin[m - 1]) / (bin[m] - bin[m - 1])
@@ -136,7 +136,7 @@ def compute_fbanks_features(pow_frames, fbank):
     """
     :param pow_frames: framed signal power spectrum, matrix [nframes x sample_rate*frame_size]
     :param fbank: matrix of the fbank filters [nfilt x (NFFT/2+1)] where NFFT: number of fft bins in power spectrum
-    :return:
+    :return: filter_banks_features: log mel FB energies matrix [nframes x nfilt]
     """
     
     ###########################################################
@@ -151,12 +151,12 @@ def compute_fbanks_features(pow_frames, fbank):
     return filter_banks_features
 
 def compute_mfcc(filter_banks_features, num_ceps=20):
-    # Here you need to compute mfcc features using precomputed log mel FB energies matrix
+    # Here you need to compute MFCCs features using precomputed log mel FB energies matrix
     
     """
-    :param filter_banks_features: filter_banks_features - log mel FB energies matrix [nframes x nfilt]
-    :param num_ceps: number of cepstral components for mfcc
-    :return: mfcc
+    :param filter_banks_features: log mel FB energies matrix [nframes x nfilt]
+    :param num_ceps: number of cepstral components for MFCCs
+    :return: mfcc: mel-frequency cepstral coefficients (MFCCs)
     """
     
     ###########################################################
@@ -174,7 +174,7 @@ def mvn_floating(features, LC, RC, unbiased=False):
     :param LC: the number of frames to the left defining the floating
     :param RC: the number of frames to the right defining the floating
     :param unbiased: biased or unbiased estimation of normalising sigma
-    :return:  normalised_features: normalised features matrix [nframes x nfeats]
+    :return: normalised_features: normalised features matrix [nframes x nfeats]
     """
     
     nframes, dim = features.shape

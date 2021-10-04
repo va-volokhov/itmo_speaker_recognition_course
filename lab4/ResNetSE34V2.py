@@ -135,7 +135,6 @@ class ResNetSE(nn.Module):
 
         return x
 
-
 def MainModel(nOut=512, **kwargs):
     # Create main model for speaker recognition
     

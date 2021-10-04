@@ -1,5 +1,5 @@
 # The script is borrowed from the following repository: https://github.com/clovaai/voxceleb_trainer
-# The script downloads the VoxCeleb1 test dataset
+# The script downloads, extracts and preprocessing the VoxCeleb1 (train and test), SLR17 and SLR28 datasets 
 # Requirement: wget running on a Linux system 
 
 
@@ -10,6 +10,9 @@ import subprocess
 import hashlib
 import tarfile
 from zipfile import ZipFile
+import glob
+
+from scipy.io import wavfile
 
 
 def md5(fname):
@@ -109,3 +112,34 @@ def extract_dataset(save_path, fname):
             zf.extractall(save_path)
 
     print('Extracting of %s is successful.'%fname)
+    
+def part_extract(save_path, fname, target):
+    # Partially extract zip files
+    
+    print('Extracting %s'%fname)
+    
+    with ZipFile(fname, 'r') as zf:
+        
+        for infile in zf.namelist():
+            
+            if any([infile.startswith(x) for x in target]):
+                zf.extract(infile, save_path)
+    
+def split_musan(save_path):
+    # Split MUSAN (SLR17) dataset for faster random access
+    
+    files = glob.glob('%s/musan/*/*/*.wav'%save_path)
+
+    audlen = 16000*5
+    audstr = 16000*3
+
+    for idx,file in enumerate(files):
+        fs,aud = wavfile.read(file)
+        writedir = os.path.splitext(file.replace('/musan/','/musan_split/'))[0]
+        
+        os.makedirs(writedir)
+        
+        for st in range(0,len(aud)-audlen, audstr):
+            wavfile.write(writedir+'/%05d.wav'%(st/fs), fs, aud[st:st+audlen])
+
+        print(idx,file)
