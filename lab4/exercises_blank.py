@@ -76,19 +76,18 @@ def map_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar):
     
     return LLR[P_err_idx], fnr_thr[P_err_idx], fpr_thr[P_err_idx], P_err_min
 
-def neyman_pearson_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, fnr):
+def neyman_pearson_test(ground_truth_sort, LLR, tar_scores, imp_scores, fnr):
     # Function to perform Neyman-Pearson test
     
     thr   = 0.0
     fpr   = 0.0
-    P_err = 0.0
     
     ###########################################################
     # Here is your code
     
     ###########################################################
     
-    return thr, fpr, P_err
+    return thr, fpr
 
 def bayes_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, C00, C10, C01, C11):
     # Function to perform Bayes' test
@@ -96,14 +95,14 @@ def bayes_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, C00, C10,
     thr   = 0.0
     fnr   = 0.0
     fpr   = 0.0
-    P_err = 0.0
+    AC    = 0.0
     
     ###########################################################
     # Here is your code
     
     ###########################################################
     
-    return thr, fnr, fpr, P_err
+    return thr, fnr, fpr, AC
 
 def minmax_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar_thr, C00, C10, C01, C11):
     # Function to perform minimax test
@@ -111,7 +110,6 @@ def minmax_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar_thr, C00,
     thr    = 0.0
     fnr    = 0.0
     fpr    = 0.0
-    P_err  = 0.0
     AC     = 0.0
     P_Htar = 0.0
     
@@ -120,4 +118,4 @@ def minmax_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar_thr, C00,
     
     ###########################################################
     
-    return thr, fnr, fpr, P_err, AC, P_Htar
+    return thr, fnr, fpr, AC, P_Htar

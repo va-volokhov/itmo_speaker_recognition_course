@@ -77,12 +77,11 @@ def map_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar):
     
     return LLR[P_err_idx], fnr_thr[P_err_idx], fpr_thr[P_err_idx], P_err_min
 
-def neyman_pearson_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, fnr):
+def neyman_pearson_test(ground_truth_sort, LLR, tar_scores, imp_scores, fnr):
     # Function to perform Neyman-Pearson test
     
     len_thr = len(LLR)
     fnr_thr = np.zeros(len_thr)
-    P_err   = np.zeros(len_thr)
     
     for idx in range(len_thr):
         solution = LLR > LLR[idx]                                     # decision
@@ -95,9 +94,8 @@ def neyman_pearson_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, 
     solution = LLR > LLR[thr_idx]                              # decision
     err      = (solution != ground_truth_sort)                 # error vector
     fpr      = np.sum(err[~ground_truth_sort])/len(imp_scores) # prob. of Type II error P(Dtar|Himp), false positive rate (FPR)
-    P_err    = fnr*P_Htar + fpr*(1 - P_Htar)                   # prob. of error
     
-    return LLR[thr_idx], fpr, P_err
+    return LLR[thr_idx], fpr
 
 def bayes_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, C00, C10, C01, C11):
     # Function to perform Bayes' test
@@ -130,9 +128,8 @@ def bayes_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar, C00, C10,
     xlabel('$LLR$'); ylabel('$\overline{C}$'); title('Average cost'); grid(); show()    
     
     AC_idx = np.argmin(AC) # argmin of Bayes' risk
-    P_err  = fnr_thr[AC_idx]*P_Htar + fpr_thr[AC_idx]*(1 - P_Htar)
     
-    return LLR[AC_idx], fnr_thr[AC_idx], fpr_thr[AC_idx], P_err
+    return LLR[AC_idx], fnr_thr[AC_idx], fpr_thr[AC_idx], AC[AC_idx]
 
 def minmax_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar_thr, C00, C10, C01, C11):
     # Function to perform minimax test
@@ -182,7 +179,5 @@ def minmax_test(ground_truth_sort, LLR, tar_scores, imp_scores, P_Htar_thr, C00,
     err      = (solution != ground_truth_sort)                 # error vector
     fnr      = np.sum(err[ ground_truth_sort])/len(tar_scores) # prob. of Type I  error P(Dimp|Htar), false negative rate (FNR)       
     fpr      = np.sum(err[~ground_truth_sort])/len(imp_scores) # prob. of Type II error P(Dtar|Himp), false positive rate (FPR)
-    P_err    = fnr*P_Htar_thr[AC_max_min_idx] + \
-               fpr*(1 - P_Htar_thr[AC_max_min_idx])            # prob. of error
     
-    return LLR[AC_min_max_idx], fnr, fpr, P_err, AC[AC_min_max_idx, AC_max_min_idx], P_Htar_thr[AC_max_min_idx]
+    return LLR[AC_min_max_idx], fnr, fpr, AC[AC_min_max_idx, AC_max_min_idx], P_Htar_thr[AC_max_min_idx]
