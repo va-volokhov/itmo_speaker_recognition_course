@@ -5,6 +5,8 @@
 import numpy
 import torch
 import torch.nn.functional as F
+from sklearn.metrics.pairwise import cosine_similarity
+import tqdm
 
 
 def extract_features(model, test_loader):
@@ -22,8 +24,11 @@ def extract_features(model, test_loader):
 
     return feats
 
+
 def compute_scores(feats, lines):
-    # Compute scores
+    """
+    Compute scores by pairwise_distance for protocol lines
+    """
 
     all_scores = []
     all_labels = []
@@ -46,5 +51,29 @@ def compute_scores(feats, lines):
         all_scores.append(score)
         all_labels.append(int(data[0]))
         all_trials.append(data[1]+" "+data[2])
+
+    return all_scores, all_labels, all_trials
+
+
+def compute_scores_cosine(data, lines):
+    """
+    Compute scores by cosine metric for protocol lines
+    """
+    all_scores = []
+    all_labels = []
+    all_trials = []
+
+    for idx, line in tqdm.tqdm(enumerate(lines), total=len(lines), desc='Scoring progress'):
+        trial_label, enroll_wav, test_wav = line.split()
+        E = data[enroll_wav].squeeze(0).numpy()
+        T = data[test_wav].squeeze(0).numpy()
+
+        E = E.reshape(1, -1)
+        T = T.reshape(1, -1)
+        score = cosine_similarity(E, T)
+
+        all_scores.append(score[0][0])
+        all_labels.append(int(trial_label))
+        all_trials.append(enroll_wav + " " + test_wav)
 
     return all_scores, all_labels, all_trials

@@ -11,8 +11,20 @@ import hashlib
 import tarfile
 from zipfile import ZipFile
 import glob
-
+import numpy as np
+from tqdm import tqdm
 from scipy.io import wavfile
+from pathlib import Path
+from multiprocessing import Pool
+import soundfile
+from scipy import signal
+import random
+from functools import partial
+
+
+def check_dir(pth_):
+    if not Path(pth_).is_dir():
+        Path(pth_).mkdir(parents=True, exist_ok=True)
 
 
 def md5(fname):
@@ -27,6 +39,7 @@ def md5(fname):
             hash_md5.update(chunk)
     
     return hash_md5.hexdigest()
+
 
 def download_dataset(lines, user, password, save_path, reload=False):
     """
@@ -59,7 +72,8 @@ def download_dataset(lines, user, password, save_path, reload=False):
         
         else:
             raise Warning('Checksum failed %s.'%outfile)
-            
+
+
 def concatenate(lines, save_path):
     # Concatenate file parts
 
@@ -81,6 +95,7 @@ def concatenate(lines, save_path):
 
         out = subprocess.call('rm %s/%s' %(save_path, infile), shell=True)
 
+
 def download_protocol(lines, save_path, reload=False):
     # Download with wget
 
@@ -98,6 +113,7 @@ def download_protocol(lines, save_path, reload=False):
 
         print('File %s is downloaded.'%outfile)
 
+
 def extract_dataset(save_path, fname):
     # Extract zip files
     
@@ -112,7 +128,8 @@ def extract_dataset(save_path, fname):
             zf.extractall(save_path)
 
     print('Extracting of %s is successful.'%fname)
-    
+
+
 def part_extract(save_path, fname, target):
     # Partially extract zip files
     
@@ -124,7 +141,8 @@ def part_extract(save_path, fname, target):
             
             if any([infile.startswith(x) for x in target]):
                 zf.extract(infile, save_path)
-    
+
+
 def split_musan(save_path):
     # Split MUSAN (SLR17) dataset for faster random access
     
@@ -143,3 +161,83 @@ def split_musan(save_path):
             wavfile.write(writedir+'/%05d.wav'%(st/fs), fs, aud[st:st+audlen])
 
         print(idx,file)
+
+
+def run_voxceleb_convert(input_path, result_path, fun, threads=5):
+    """
+    run files processing in a parralel mode using function fun
+    """
+
+    check_dir(result_path)
+    infile_list = []
+    outfile_list = []
+    print('Checking result folder')
+
+    for root, dir_list, files_list in os.walk(input_path):
+        for i in dir_list:
+            check_dir(Path(root.replace(input_path, result_path))/i)
+        for f in files_list:
+            infile = Path(root)/f
+            infile_list.append(infile)
+            outfile = Path(root.replace(input_path, result_path))/f.replace('.m4a', '.wav')
+            outfile_list.append(outfile)
+
+    p = Pool(threads)
+    print('Run {} folder processing'.format(input_path))
+    p.starmap(fun, zip(infile_list, outfile_list))
+    p.close()
+    p.join()
+
+    print('Finished {} folder processing'.format(input_path))
+
+
+def get_voxceleb_filelist(input_path):
+    """
+    run files processing in a parralel mode using function fun
+    """
+    infile_list = []
+    for root, dir_list, files_list in os.walk(input_path):
+        for f in files_list:
+            infile = Path(root.replace(input_path + '/', ''))/f
+            infile_list.append(str(infile))
+    return infile_list
+
+
+def aac_to_wav(infile, outfile):
+    out = subprocess.call(
+        'ffmpeg -y -i %s -ac 1 -vn -acodec pcm_s16le -ar 16000 %s >/dev/null 2>/dev/null' % (infile, outfile),
+        shell=True)
+    if out != 0:
+        raise ValueError('Conversion failed %s.' % infile)
+
+
+def change_fs(infile, outfile, fs):
+    out = subprocess.call('ffmpeg -i %s -ar %s %s >/dev/null 2>/dev/null' % (infile, fs, outfile), shell=True)
+    if out != 0:
+        raise ValueError('Conversion failed %s.' % infile)
+
+
+def apply_mp3_codec(infile, outfile):
+    out = subprocess.call(
+        'ffmpeg -i %s -f mp3 -ac 1 -b:a 16k pipe: 2>/dev/null | ffmpeg -f mp3 -i pipe: %s >/dev/null 2>/dev/null' % (
+        infile, outfile), shell=True)
+    if out != 0:
+        raise ValueError('Conversion failed %s.' % infile)
+
+
+def convert_16_8_16(infile, outfile):
+    out = subprocess.call('ffmpeg -i %s -f s16le -ar 8000 pipe: 2>/dev/null | ffmpeg -f s16le -ar 8000 -i pipe: -ar 16000 %s >/dev/null 2>/dev/null'% (infile, outfile), shell=True)
+    if out != 0:
+        raise ValueError('Conversion failed %s.' % infile)
+
+
+def reverberate(infile, outfile, rir_files):
+    # print('Processing {}'.format(infile))
+    rir_file = random.choice(rir_files)
+    audio, fs_a = soundfile.read(infile)
+    rir, fs_r = soundfile.read(rir_file)
+    rir = rir / np.sqrt(np.sum(rir ** 2))
+    audio_new = signal.convolve(audio, rir, mode='full')
+    soundfile.write(outfile, audio_new, fs_a)
+    return
+
