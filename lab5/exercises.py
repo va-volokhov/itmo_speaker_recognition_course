@@ -7,19 +7,17 @@ import itertools
 import tqdm
 
 import torch
+import torch.nn as nn
 from torch import optim
-from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 
 from matplotlib.pyplot import hist, plot, show, grid, title, xlabel, ylabel, legend, axis, imshow
 from sklearn.metrics.pairwise import cosine_similarity
-from cllr_loss import CllrLoss
 from common import get_eer
 
 
 def get_tar_imp_scores(all_scores, all_labels):
-    """
-    Get target and impostors scores based on the labels
-    """
+    # Function to get target and impostors scores based on the labels
 
     tar_scores = []
     imp_scores = []
@@ -36,13 +34,12 @@ def get_tar_imp_scores(all_scores, all_labels):
 
     return tar_scores, imp_scores
 
-
 def plot_histograms_2sets(all_scores_1, all_labels_1,
                           all_scores_2, all_labels_2,
-                          names=['in_domain', 'out_of_domain']):
-    """
-
-    """
+                          names=['in-domain', 'out-of-domain']):
+    # Function to show target/impostor histograms and compute EER to out-of-domain and in-domain datasets
+    
+    # Get target and impostors scores
     tar_scores_1, imp_scores_1 = get_tar_imp_scores(all_scores_1, all_labels_1)
     tar_scores_2, imp_scores_2 = get_tar_imp_scores(all_scores_2, all_labels_2)
 
@@ -67,22 +64,16 @@ def plot_histograms_2sets(all_scores_1, all_labels_1,
     grid()
     show()
 
-    # Compute Equal Error Rate
-    EER_1,thresh_EER_1, DCF_1, thresh_DCF_1 = get_eer(tar_scores_1, imp_scores_1)
-    EER_2, thresh_EER_2, DCF_2, thresh_DCF_2 = get_eer(tar_scores_2, imp_scores_2)
+    # Compute equal error rate
+    EER_1, thresh_EER_1 = get_eer(tar_scores_1, imp_scores_1)
+    EER_2, thresh_EER_2 = get_eer(tar_scores_2, imp_scores_2)
 
-    print("Equal Error Rate {0} (EER): {1:.3f}%, threshold EER: {2:.3f}, DCF: {3:.3f} ".format(names[0],
-                                                                                  EER_1, thresh_EER_1,
-                                                                                  DCF_1))
-    print("Equal Error Rate {0} (EER): {1:.3f}%, threshold EER: {2:.3f}, DCF: {3:.3f}".format(names[1],
-                                                                                              EER_2, thresh_EER_2,
-                                                                                              DCF_2))
-
+    print("Equal Error Rate {0} (EER): {1:.3f}%, threshold EER: {2:.3f} ".format(names[0], EER_1, thresh_EER_1))
+    print("Equal Error Rate {0} (EER): {1:.3f}%, threshold EER: {2:.3f} ".format(names[1], EER_2, thresh_EER_2))
 
 def mean_embd_norm(test_embds, adapt_embds):
-    """
-    Apply mean embedding normalization
-    """
+    # Function to apply mean embedding normalization
+    
     test_embds_adapted = {}
     adapt_embds_list = [adapt_embds[k] for k in adapt_embds.keys()]
     mean_embd = torch.stack(adapt_embds_list).mean(0)
@@ -91,63 +82,64 @@ def mean_embd_norm(test_embds, adapt_embds):
 
     for k in test_embds.keys():
         test_embds_adapted[k] = test_embds[k] - mean_embd
+    
     return test_embds_adapted
-
 
 def s_norm(test_data, lines, adapt_data, N_s=200, eps=0.5):
     """
-    Performs s-normalization for scores "scores" with the snorm_data
+    Function to perform s-normalization for scores with the snorm_data
     :param test_data: test embeddings
     :param lines: test protocol
     :param scores: raw scores matrix
     :param adapt_data: data for s-norm (s-norm embeddings)
     :param N_s: top N impostors scrores for s-normalization
     :param eps: epsilon for std
-    :return:
-            snorm_scores - s-normalized scores
+    :return: snorm_scores - s-normalized scores
     """
-
+    
     scores_adapted = []
     all_labels = []
     all_trials = []
 
-    # prepare lists of unique wavs from protocols
+    # Prepare lists of unique wavs from protocols
     enroll_list = list(set(list([x.strip().split()[1] for x in lines])))
-    test_list = list(set(list([x.strip().split()[2] for x in lines])))
-    adapt_list = list(adapt_data.keys())
+    test_list   = list(set(list([x.strip().split()[2] for x in lines])))
+    adapt_list  = list(adapt_data.keys())
 
-    # prepare entolls: save enroll embds in ndarray [num_wavs x emb_size]
+    # Prepare entolls: save enroll embds in ndarray [num_wavs x emb_size]
     E = []
     for id, enr in enumerate(enroll_list):
         E.append(test_data[enr].squeeze(0).numpy())
     E = np.array(E)
 
-    # prepare tests: save test embds in ndarray [num_wavs x emb_size]
+    # Prepare tests: save test embds in ndarray [num_wavs x emb_size]
     T = []
     for id, tst in enumerate(test_list):
         T.append(test_data[tst].squeeze(0).numpy())
     T = np.array(T)
 
-    # prepare adapt data: save adapt embds in ndarray [num_wavs x emb_size]
+    # Prepare adapt data: save adapt embds in ndarray [num_wavs x emb_size]
     A = []
     for id, a in enumerate(adapt_list):
         A.append(adapt_data[a].squeeze(0).numpy())
     A = np.array(A)
 
-    # prepare scores with enroll-vs-adapt set
+    # Prepare scores with enroll-vs-adapt set
     scores_e = cosine_similarity(E, A)
-    # prepare scores with test-vs-adapt se
+    
+    # Prepare scores with test-vs-adapt se
     scores_t = cosine_similarity(T, A)
-    # sort scores to choose the most hard ones
+    
+    # Sort scores to choose the most hard ones
     scores_e = -np.sort(-scores_e, axis=1)
     scores_t = -np.sort(-scores_t, axis=1)
-    # use N_s hard impostors to get mean and std for each enroll and test
+    # Use N_s hard impostors to get mean and std for each enroll and test
     mn_t = scores_t[:, :N_s].mean(1)[:, np.newaxis]
     mn_e = scores_e[:, :N_s].mean(1)[:, np.newaxis]
     std_t = np.std(scores_t[:, :N_s], axis=1)[:, np.newaxis]
     std_e = np.std(scores_e[:, :N_s], axis=1)[:, np.newaxis]
 
-    # create dict for faster operations
+    # Create dict for faster operations
     snorm_params_enr = {}
     for id, enr in enumerate(enroll_list):
         snorm_params_enr[enr] = [mn_e[id], std_e[id]]
@@ -165,13 +157,13 @@ def s_norm(test_data, lines, adapt_data, N_s=200, eps=0.5):
         T = T.reshape(1, -1)
         score = cosine_similarity(E, T)
 
-        ## start snorm
+        ## Start snorm
         mn_e, std_e = snorm_params_enr[enroll_wav]
         mn_t, std_t = snorm_params_tst[test_wav]
 
-        score = (score - mn_e) / (std_e + eps) + (score - mn_t.T) / (std_t.T + eps)
+        score = (score - mn_e)/(std_e + eps) + (score - mn_t.T)/(std_t.T + eps)
         score = score[0][0]
-        ## end snorm
+        ## End snorm
 
         scores_adapted.append(score)
         all_labels.append(int(trial_label))
@@ -179,50 +171,87 @@ def s_norm(test_data, lines, adapt_data, N_s=200, eps=0.5):
 
     return scores_adapted, all_labels, all_trials
 
+class CalibrationDataset(Dataset):
 
-def train_calibration(model, train_set, test_set, system_name, num_epochs=10):
-    """
-    :return:
-    """
+    def __init__(self, target_scores, impostor_scores):
+        super(CalibrationDataset, self).__init__()
 
-    batch_size = 200
-    lr = 2
+        self.target_scores   = target_scores
+        self.impostor_scores = impostor_scores
+        self.L_tar = len(target_scores)
+        self.L_imp = len(impostor_scores)
 
-    params = list(model.parameters())
+    def __len__(self):
+        
+        return 1
 
-    if len(params) != 0:
-        optimizer = optim.SGD(params, lr=lr, momentum=0.9, weight_decay=0, nesterov=True)
-        # optimizer = optim.Adam(params, lr=lr)#, weight_decay=0.00001)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=15)
-    else:
-        optimizer = None
-        scheduler = None
+    def __getitem__(self, idx):
 
-    criterion_verif = CllrLoss()
-    train_loader = DataLoader(train_set,
-                              batch_size=batch_size,
-                              pin_memory=True,
-                              num_workers=1,
-                              shuffle=True)
+        return self.target_scores, self.impostor_scores
 
+class LinearCalibrationModel(torch.nn.Module):
+    # Building of the full model for constructing the extractor of features
+    
+    def __init__(self):
+        super(LinearCalibrationModel, self).__init__()
+        
+        self.calib_params = nn.Linear(1, 1)
+
+    def forward(self, x):
+
+        calib_x = self.calib_params(x)
+
+        return calib_x
+    
+class CalibrationLoss(nn.Module):
+
+    def __init__(self, ptar=0.01):
+        '''
+        Calibration loss. Code is based on https://github.com/alumae/sv_score_calibration/blob/master/calibrate_scores.py
+        :param ptar: probability of target hypothesis
+        '''
+        
+        super(CalibrationLoss, self).__init__()
+        
+        self.ptar  = ptar
+        self.alpha = np.log(ptar/(1 - ptar))
+
+    def forward(self, target_llrs, nontarget_llrs):
+
+        def negative_log_sigmoid(lodds):
+            # Function to compute -log(sigmoid(log_odds))
+            
+            return torch.log1p(torch.exp(-lodds))
+
+        return self.ptar*torch.mean(negative_log_sigmoid(target_llrs + self.alpha)) + \
+               (1 - self.ptar)*torch.mean(negative_log_sigmoid(-(nontarget_llrs + self.alpha)))
+
+def train_calibration(train_loader, model, criterion, optimizer, scheduler, num_epochs, verbose=False):
+    # Function to train calibration model
+    
+    model.train()
+    
     for epoch in range(0, num_epochs):
-        model.train()
+        
         for batch_idx, batch_data in enumerate(train_loader):
-            tar_sc = batch_data['tar_scores']
-            imp_sc = batch_data['imp_scores']
+            tar_sc = batch_data[0]
+            imp_sc = batch_data[1]
+            
             optimizer.zero_grad()
 
             calib_tar_sc = model(tar_sc.transpose(0, 1)).squeeze()
             calib_imp_sc = model(imp_sc.transpose(0, 1)).squeeze()
-            loss = criterion_verif(calib_tar_sc, calib_imp_sc)
+            
+            loss = criterion(calib_tar_sc, calib_imp_sc)
             loss.backward()
 
             optimizer.step()
-            # if scheduler is not None:
-            #     if isinstance(scheduler, torch.optim.lr_scheduler.OneCycleLR):
-            #         scheduler.step()
+                            
+        lr_value = optimizer.param_groups[0]['lr']
 
-            lr_value = optimizer.param_groups[0]['lr']
-
-            print('batch {}, cllr loss {} lr {}'.format(batch_idx + epoch * len(train_loader), loss.item(), lr_value))
+        if verbose:
+            print("Epoch {:1.0f}, LR {:f} Loss {:f}".format(epoch, lr_value, loss.item()))
+                
+        scheduler[0].step()
+    
     return

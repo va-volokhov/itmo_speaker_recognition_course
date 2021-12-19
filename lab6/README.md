@@ -1,1 +1,1 @@
-# Laboratory work 6. Final report
+# Laboratory work 6. Modernization of the basic speaker recognition system
