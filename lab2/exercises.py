@@ -10,6 +10,12 @@ from skimage.morphology import opening, closing
 
 def load_vad_markup(path_to_rttm, signal, fs):
     # Function to read rttm files and generate VAD's markup in samples
+    """
+    :param path_to_rttm: path to rttm markup file
+    :param signal: raw input signal
+    :param fs: sampling frequency
+    :return: vad_markup: VAD's markup in samples
+    """
     
     vad_markup = np.zeros(len(signal)).astype('float32')
     
@@ -29,7 +35,12 @@ def load_vad_markup(path_to_rttm, signal, fs):
 
 def framing(signal, window=320, shift=160):
     # Function to create frames from signal
-    
+    """
+    :param signal: raw input signal
+    :param window: size of sliding window in samples
+    :param shift: size of the sliding step in samples
+    :return: frames [n_frames x win_size]
+    """
     shape   = (int((signal.shape[0] - window)/shift + 1), window)
     strides = (signal.strides[0]*shift, signal.strides[0])
     
@@ -39,14 +50,20 @@ def framing(signal, window=320, shift=160):
 
 def frame_energy(frames):
     # Function to compute frame energies
-    
+    """
+    :param frames: matrix of frames of the signal [n_frames x win_size]
+    :return: E: energies vector [n_frames x 1]
+    """
     E = frames.sum(axis=1)
     
     return E
 
 def norm_energy(E):
     # Function to normalize energy by mean energy and energy standard deviation
-    
+    """
+    :param E: signal sliding frames energies vector [n_frames x 1]
+    :return: E_norm: normalised energies vector [n_frames x 1]
+    """
     E_norm = np.copy(E)
     E_norm -= E_norm.mean()
     E_norm /= (E_norm.std() + 1e-10)
@@ -54,7 +71,15 @@ def norm_energy(E):
     return E_norm
 
 def gmm_train(E, gauss_pdf, n_realignment):
-    # Function to train parameters of gaussian mixture model
+    # Function to train parameters of gaussian mixture model using EM-algorithm
+    """
+    :param E: time series of input data [n_frames x 1]
+    :param gauss_pdf: gaussian probability density function
+    :param n_realignment: the number of EM iterations
+    :return: w - weights parameters of gmm,
+             m - means parameters of gmm,
+             sigma - sigmas parameters of gmm
+    """
     
     # Initialization gaussian mixture models
     w     = np.array([ 0.33, 0.33, 0.33])
@@ -95,7 +120,14 @@ def gmm_train(E, gauss_pdf, n_realignment):
 
 def eval_frame_post_prob(E, gauss_pdf, w, m, sigma):
     # Function to estimate a posterior probability that frame isn't speech
-
+    """
+    :param E: time series of input data [n_frames x 1]
+    :param gauss_pdf: gaussian probability density function
+    :param w: weights parameters of gmm
+    :param m: means parameters of gmm
+    :param sigma: sigmas parameters of gmm
+    :return: posterior probability time vector
+    """
     g = np.zeros([len(E), len(w)])
     
     for j in range(len(m)):
@@ -109,6 +141,16 @@ def eval_frame_post_prob(E, gauss_pdf, w, m, sigma):
 
 def energy_gmm_vad(signal, window, shift, gauss_pdf, n_realignment, vad_thr, mask_size_morph_filt):
     # Function to compute markup energy voice activity detector based of gaussian mixtures model
+    """
+    :param signal: raw input signal
+    :param window: size of sliding window in samples
+    :param shift: size of the sliding step in samples
+    :param gauss_pdf: gaussian probability density function
+    :param n_realignment: number of EM iterations
+    :param vad_thr: posterior threshold
+    :param mask_size_morph_filt: the size of mask for Morphology Filter
+    :return: vad_markup_real: VAD's markup in samples
+    """
     
     # Squared signal
     squared_signal = signal**2
@@ -145,6 +187,11 @@ def energy_gmm_vad(signal, window, shift, gauss_pdf, n_realignment, vad_thr, mas
 
 def reverb(signal, impulse_response):
     # Function to create reverberation effect
+    """
+    :param signal: raw input signal
+    :param impulse_response: impulse response for augmentation
+    :return: signal_reverb: reverberated signal
+    """
     
     signal_reverb = scipy.signal.convolve(signal, impulse_response, mode='full')
     signal_reverb = signal_reverb/np.abs(signal_reverb).max()
@@ -154,7 +201,11 @@ def reverb(signal, impulse_response):
 
 def awgn(signal, sigma_noise):
     # Function to add white gaussian noise to signal
-    
+    """
+    :param signal: raw input signal
+    :param sigma_noise: sigma of noise to add
+    :return: signal_noise: noised signal
+    """
     signal_noise = signal + sigma_noise*np.random.randn(len(signal)).astype('float32')
     signal_noise = signal_noise/np.abs(signal_noise).max()
     
