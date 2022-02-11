@@ -181,7 +181,14 @@ class ResNet(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, block, planes, blocks, stride=1, activation=nn.ReLU):
-
+        """
+        :param block:
+        :param planes:
+        :param blocks:
+        :param stride:
+        :param activation:
+        :return:
+        """
         downsample = None
 
         if stride != 1 or self.inplanes != planes*block.expansion:
