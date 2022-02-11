@@ -88,14 +88,16 @@ def power_spectrum(frames, NFFT=512):
 
     return pow_frames
 
-def compute_fbank_filters(nfilt=40, sample_rate=16000, NFFT=512):
-    # Here you need to compute fbank filters (FBs) for special case (sample_rate & NFFT)
 
+def compute_fbank_filters(nfilt=40, sample_rate=16000, NFFT=512):
     """
+    Function to compute Mel Filter Bank features
     :param nfilt: number of filters
     :param sample_rate: signal sampling rate
     :param NFFT: number of fft bins in power spectrum
     :return: fbank [nfilt x (NFFT/2+1)]
+
+    TODO Here you need to compute fbank filters (FBs) for special case (sample_rate & NFFT)
     """
     
     low_freq_mel = 0
