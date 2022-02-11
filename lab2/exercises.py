@@ -23,15 +23,16 @@ def load_vad_markup(path_to_rttm, signal, fs):
         lines = f.readlines()
         
     for line in lines:
-        line  = line.strip().split(' ')
+        line = line.strip().split(' ')
         
         start = float(line[3])*fs
-        dur   = float(line[4])*fs
-        end   = start + dur
+        dur = float(line[4])*fs
+        end = start + dur
         
         vad_markup[int(start):int(end)] = 1
     
     return vad_markup
+
 
 def framing(signal, window=320, shift=160):
     # Function to create frames from signal
@@ -41,12 +42,13 @@ def framing(signal, window=320, shift=160):
     :param shift: size of the sliding step in samples
     :return: frames [n_frames x win_size]
     """
-    shape   = (int((signal.shape[0] - window)/shift + 1), window)
+    shape = (int((signal.shape[0] - window)/shift + 1), window)
     strides = (signal.strides[0]*shift, signal.strides[0])
     
-    frames  = np.lib.stride_tricks.as_strided(signal, shape=shape, strides=strides)
+    frames = np.lib.stride_tricks.as_strided(signal, shape=shape, strides=strides)
     
     return frames
+
 
 def frame_energy(frames):
     # Function to compute frame energies
@@ -57,6 +59,7 @@ def frame_energy(frames):
     E = frames.sum(axis=1)
     
     return E
+
 
 def norm_energy(E):
     # Function to normalize energy by mean energy and energy standard deviation
@@ -69,6 +72,7 @@ def norm_energy(E):
     E_norm /= (E_norm.std() + 1e-10)
     
     return E_norm
+
 
 def gmm_train(E, gauss_pdf, n_realignment):
     # Function to train parameters of gaussian mixture model using EM-algorithm
@@ -118,6 +122,7 @@ def gmm_train(E, gauss_pdf, n_realignment):
         
     return w, m, sigma
 
+
 def eval_frame_post_prob(E, gauss_pdf, w, m, sigma):
     # Function to estimate a posterior probability that frame isn't speech
     """
@@ -138,6 +143,7 @@ def eval_frame_post_prob(E, gauss_pdf, w, m, sigma):
         g_norm = g_norm + w[j]*g[:, j]
             
     return w[0]*g[:, 0]/(g_norm + 1e-10)
+
 
 def energy_gmm_vad(signal, window, shift, gauss_pdf, n_realignment, vad_thr, mask_size_morph_filt):
     # Function to compute markup energy voice activity detector based of gaussian mixtures model
